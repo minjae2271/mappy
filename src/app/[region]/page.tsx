@@ -10,13 +10,7 @@ import { zoom, zoomIdentity } from "d3-zoom";
 import { select } from "d3-selection";
 import { geoPath, geoMercator } from "d3-geo";
 import { geoCentroid } from "d3-geo";
-
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { RegionDialog } from "@/components/RegionDialog";
 
 interface ExtendedFeature extends Feature<Geometry> {
   rsmKey: string;
@@ -38,9 +32,12 @@ interface RegionConfig {
   debug?: boolean;
 }
 
-interface SelectedArea {
-  name: string;
-  geometry: any;
+interface SelectedArea extends Feature<Geometry> {
+  properties: {
+    name?: string;
+    STATE_NAME?: string;
+    CTP_KOR_NM?: string;
+  };
 }
 
 const regionConfigs: Record<Region, RegionConfig> = {
@@ -119,100 +116,74 @@ export default function RegionPage({ params }: { params: Promise<{ region: Regio
   }, [position, handleZoom]);
 
   return (
-    <div className="container h-full mx-auto py-4">
-      <h1 className="text-3xl font-bold mb-6">{config.name} Map</h1>
-      <div 
-        className="aspect-[4/3] w-full h-full border overflow-hidden rounded-lg bg-slate-50"
-        onWheel={handleWheel}
-        id="map-container"
+    <div className="relative w-full h-full">
+      <ComposableMap
+        projection={config.projection}
+        projectionConfig={{
+          scale: config.scale,
+          center: config.center
+        }}
+        style={{
+          width: "100%",
+          height: "100%",
+        }}
       >
-        <ComposableMap
-          projection={config.projection}
-          projectionConfig={{
-            scale: config.scale,
-            center: config.center
-          }}
+        <g
+          transform={`translate(${position.coordinates[0]}, ${position.coordinates[1]}) scale(${position.zoom})`}
         >
-          <g
-            transform={`translate(${position.coordinates[0]}, ${position.coordinates[1]}) scale(${position.zoom})`}
-          >
-            <Geographies geography={config.jsonPath}>
-              {({ geographies }: { geographies: ExtendedFeature[] }) => {
-                if (config.debug) {
-                  console.log("All available countries:", 
-                    geographies.map(geo => geo.properties.name).sort());
-                }
-                
-                return geographies
-                  .filter(geo => {
-                    const name = config.getFeatureName?.(geo);
-                    return !config.filterCountries || 
-                           config.filterCountries.includes(name || '');
-                  })
-                  .map((geo) => {
-                    const name = config.getFeatureName?.(geo);
-                    return (
-                      <Geography
-                        key={geo.rsmKey}
-                        geography={geo}
-                        fill="#DDD"
-                        stroke="#FFF"
-                        strokeWidth={0.5}
-                        style={{
-                          default: { outline: "none", cursor: "pointer" },
-                          hover: { fill: "#F53", outline: "none" },
-                          pressed: { outline: "none" },
-                        }}
-                        onClick={() => {
-                          const areaName = config.getFeatureName?.(geo);
-                          if (areaName) {
-                            console.log("Area name from config:", areaName);
-                            setSelectedArea({ 
+          <Geographies geography={config.jsonPath}>
+            {({ geographies }: { geographies: ExtendedFeature[] }) => {
+              if (config.debug) {
+                console.log("All available countries:", 
+                  geographies.map(geo => geo.properties.name).sort());
+              }
+              
+              return geographies
+                .filter(geo => {
+                  const name = config.getFeatureName?.(geo);
+                  return !config.filterCountries || 
+                         config.filterCountries.includes(name || '');
+                })
+                .map((geo) => {
+                  const name = config.getFeatureName?.(geo);
+                  return (
+                    <Geography
+                      key={geo.rsmKey}
+                      geography={geo}
+                      fill="#DDD"
+                      stroke="#FFF"
+                      strokeWidth={0.5}
+                      style={{
+                        default: { outline: "none", cursor: "pointer" },
+                        hover: { fill: "#F53", outline: "none" },
+                        pressed: { outline: "none" },
+                      }}
+                      onClick={() => {
+                        const areaName = config.getFeatureName?.(geo);
+                        if (areaName) {
+                          console.log("Area name from config:", areaName);
+                          setSelectedArea({
+                            type: "Feature",
+                            geometry: geo.geometry,
+                            properties: {
                               name: areaName,
-                              geometry: geo
-                            });
-                          }
-                        }}
-                        data-tooltip-id="map-tooltip"
-                        data-tooltip-content={name}
-                      />
-                    );
-                  });
-              }}
-            </Geographies>
-          </g>
-        </ComposableMap>
-      </div>
+                              STATE_NAME: geo.properties.STATE_NAME,
+                              CTP_KOR_NM: geo.properties.CTP_KOR_NM
+                            }
+                          });
+                        }
+                      }}
+                      data-tooltip-id="map-tooltip"
+                      data-tooltip-content={name}
+                    />
+                  );
+                });
+            }}
+          </Geographies>
+        </g>
+      </ComposableMap>
 
-      <Dialog open={!!selectedArea} onOpenChange={() => setSelectedArea(null)}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>{selectedArea?.name}</DialogTitle>
-          </DialogHeader>
-          <div className="w-full h-[60vh] border rounded-lg overflow-hidden bg-slate-50 flex items-center justify-center p-8">
-            {selectedArea && (
-              <svg
-                width="100%"
-                height="100%"
-                viewBox="0 0 100 100"
-                preserveAspectRatio="xMidYMid meet"
-              >
-                <path
-                  d={geoPath(geoMercator().fitSize([100, 100], selectedArea.geometry))(selectedArea.geometry) || ""}
-                  fill="#999999"
-                  fillOpacity="0.2"
-                  stroke="#FFF"
-                  strokeWidth={0.5}
-                />
-              </svg>
-            )}
-          </div>
-          <div className="py-4">
-            <p>이 지역에 대한 상세 정보를 여기에 표시할 수 있습니다.</p>
-            <p>예: 인구, 면적, 주요 도시 등</p>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <RegionDialog selectedArea={selectedArea} onClose={() => setSelectedArea(null)} />
     </div>
   );
 } 

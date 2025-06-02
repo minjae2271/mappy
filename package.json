@@ -20,6 +20,7 @@
     "@tanstack/react-query-devtools": "^5.77.2",
     "@types/d3-selection": "^3.0.11",
     "@types/d3-zoom": "^3.0.8",
+    "@types/react-resizable": "^3.0.8",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "d3-geo": "^3.1.1",
@@ -29,6 +30,8 @@
     "next": "15.3.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-resizable": "^3.0.5",
+    "react-rnd": "^10.5.2",
     "react-simple-maps": "^2.3.0",
     "tailwind-merge": "^3.3.0"
   },
