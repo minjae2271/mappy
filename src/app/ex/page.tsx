@@ -8,8 +8,6 @@ import { use } from "react";
 import { useState, useCallback } from "react";
 import { zoom, zoomIdentity } from "d3-zoom";
 import { select } from "d3-selection";
-import { geoPath, geoMercator } from "d3-geo";
-import { geoCentroid } from "d3-geo";
 import { RegionDialog } from "@/components/RegionDialog";
 
 interface ExtendedFeature extends Feature<Geometry> {
