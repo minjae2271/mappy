@@ -1,9 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps";
 
 export default function EuropePage() {
+  const { region } = useParams();
   const router = useRouter();
 
   const config = {
@@ -15,7 +16,7 @@ export default function EuropePage() {
   }
 
   return <main className="w-full h-full flex flex-col items-center justify-center py-4 px-6 gap-4">
-    <h1 className="text-2xl font-bold">Europe</h1>
+    <h1 className="text-2xl font-bold">{region}</h1>
     <div className="w-full h-full border-2 border-gray-300 rounded-md">
       <ComposableMap
         projection={config.projection}
@@ -42,8 +43,7 @@ export default function EuropePage() {
                         pressed: { outline: "none" },
                       }}
                     onClick={() => {
-                        // router.push(`maps/${geo.properties.name}`);
-                        router.push(`maps`);
+                        router.push(`/map/europe/${geo.properties.name}`);
                     }}
                     />
 
