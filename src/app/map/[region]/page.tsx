@@ -1,11 +1,13 @@
 "use client";
 
+import { useMapStore } from "@/store/mapStore";
 import { useParams, useRouter } from "next/navigation";
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps";
 
 export default function EuropePage() {
   const { region } = useParams();
   const router = useRouter();
+  const { setRegion, setArea, setType, setGeometry } = useMapStore();
 
   const config = {
     name: "Europe",
@@ -43,7 +45,11 @@ export default function EuropePage() {
                         pressed: { outline: "none" },
                       }}
                     onClick={() => {
-                        router.push(`/map/europe/${geo.properties.name}`);
+                        router.push(`/map/${region}/${geo.properties.name}`);
+                        setType("Feature");
+                        setGeometry(geo.geometry);
+                        setRegion(region as string);
+                        setArea(geo.properties.name);
                     }}
                     />
 
